@@ -1,53 +1,52 @@
-# rollout-simple.yaml
+# rollout-web-simple.yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
-  name: nginx-rollout
+  name: nginx-web-simple
   namespace: default
 spec:
   replicas: 3
-  revisionHistoryLimit: 2
   selector:
     matchLabels:
-      app: nginx
+      app: nginx-web
   template:
     metadata:
       labels:
-        app: nginx
+        app: nginx-web
     spec:
       containers:
       - name: nginx
         image: nginx:1.24-alpine
         ports:
         - containerPort: 80
-          name: http
-        resources:
-          requests:
-            memory: "64Mi"
-            cpu: "100m"
-          limits:
-            memory: "128Mi"
-            cpu: "200m"
-        readinessProbe:
-          httpGet:
-            path: /
-            port: 80
-          initialDelaySeconds: 5
-          periodSeconds: 5
-        livenessProbe:
-          httpGet:
-            path: /
-            port: 80
-          initialDelaySeconds: 10
-          periodSeconds: 10
   strategy:
     canary:
       steps:
       - setWeight: 20
-      - pause: {duration: 1m}
-      - setWeight: 40
-      - pause: {duration: 1m}
-      - setWeight: 60
-      - pause: {duration: 1m}
+      - pause: {duration: 30s}
+      - analysis:
+          templates:
+          - templateName: web-health
+      - setWeight: 50
+      - pause: {duration: 30s}
       - setWeight: 80
-      - pause: {duration: 1m}
+      - pause: {duration: 30s}
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: web-health
+  namespace: default
+spec:
+  metrics:
+  - name: health-check
+    count: 5                    # Run 5 times
+    interval: 10s               # Every 10 seconds
+    successCondition: result == true
+    failureLimit: 2             # Allow 2 failures
+    provider:
+      web:
+        url: "http://nginx-service.default.svc.cluster.local/health"
+        timeoutSeconds: 10
+        jsonPath: "{$.healthy}"
