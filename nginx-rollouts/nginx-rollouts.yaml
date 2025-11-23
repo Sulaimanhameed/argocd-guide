@@ -52,7 +52,7 @@ spec:
     failureLimit: 2
     provider:
       web:
-        url: "http://nginx-service.default.svc.cluster.local/health"
+        url: "http://nginx-service.default.svc.cluster.local/"
         timeoutSeconds: 10
         jsonPath: "{$.healthy}"
 
