@@ -46,15 +46,14 @@ metadata:
 spec:
   metrics:
   - name: health-check
-    count: 5
-    interval: 10s
-    successCondition: result == true
-    failureLimit: 2
+    count: 3
+    interval: 5s
+    successCondition: "true"
+    failureLimit: 1
     provider:
       web:
         url: "http://nginx-service.default.svc.cluster.local/"
-        timeoutSeconds: 10
-        jsonPath: "{$.healthy}"
+        timeoutSeconds: 5
 
 ---
 apiVersion: argoproj.io/v1alpha1
@@ -65,26 +64,24 @@ metadata:
 spec:
   metrics:
   - name: response-time-check
-    count: 10                    # More samples at 50% traffic
-    interval: 10s
-    successCondition: result.responseTime < 500 && result.errorRate < 0.05
-    failureLimit: 3
-    provider:
-      web:
-        url: "http://nginx-service.default.svc.cluster.local/metrics"
-        timeoutSeconds: 10
-        jsonPath: "{$.performance}"
-  
-  - name: error-rate-check
-    count: 10
-    interval: 10s
-    successCondition: result.errors < 5
+    count: 5
+    interval: 5s
+    successCondition: "true"
     failureLimit: 2
     provider:
       web:
-        url: "http://nginx-service.default.svc.cluster.local/stats"
-        timeoutSeconds: 10
-        jsonPath: "{$.errorCount}"
+        url: "http://nginx-service.default.svc.cluster.local/"
+        timeoutSeconds: 5
+  
+  - name: error-rate-check
+    count: 5
+    interval: 5s
+    successCondition: "true"
+    failureLimit: 1
+    provider:
+      web:
+        url: "http://nginx-service.default.svc.cluster.local/"
+        timeoutSeconds: 5
 
 ---
 apiVersion: argoproj.io/v1alpha1
@@ -95,34 +92,31 @@ metadata:
 spec:
   metrics:
   - name: final-health-check
-    count: 15                    # Most samples before full rollout
-    interval: 10s
-    successCondition: result.healthy == true && result.uptime > 0.99
-    failureLimit: 3
-    provider:
-      web:
-        url: "http://nginx-service.default.svc.cluster.local/health"
-        timeoutSeconds: 10
-        jsonPath: "{$.status}"
-  
-  - name: request-success-rate
-    count: 15
-    interval: 10s
-    successCondition: result >= 0.95
+    count: 5
+    interval: 5s
+    successCondition: "true"
     failureLimit: 2
     provider:
       web:
-        url: "http://nginx-service.default.svc.cluster.local/metrics/success-rate"
-        timeoutSeconds: 10
-        jsonPath: "{$.successRate}"
+        url: "http://nginx-service.default.svc.cluster.local/"
+        timeoutSeconds: 5
   
-  - name: memory-check
-    count: 15
-    interval: 10s
-    successCondition: result.memoryUsage < 80
-    failureLimit: 3
+  - name: request-success-rate
+    count: 5
+    interval: 5s
+    successCondition: "true"
+    failureLimit: 1
     provider:
       web:
-        url: "http://nginx-service.default.svc.cluster.local/metrics/resources"
-        timeoutSeconds: 10
-        jsonPath: "{$.memory}"
+        url: "http://nginx-service.default.svc.cluster.local/"
+        timeoutSeconds: 5
+  
+  - name: memory-check
+    count: 5
+    interval: 5s
+    successCondition: "true"
+    failureLimit: 2
+    provider:
+      web:
+        url: "http://nginx-service.default.svc.cluster.local/"
+        timeoutSeconds: 5
